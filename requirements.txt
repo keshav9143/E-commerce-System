@@ -1,0 +1,35 @@
+# CartOS — Python dependencies
+# Tested against Python 3.10+
+# MySQL 8.0.1+ is required for SELECT ... FOR UPDATE SKIP LOCKED support.
+
+# ── Web framework ──────────────────────────────────────────────────────────────
+Flask==2.3.3
+Werkzeug==2.3.7
+
+# ── Database ───────────────────────────────────────────────────────────────────
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.7
+# PyMySQL is a pure-Python MySQL driver; no C compiler required.
+PyMySQL==1.1.1
+# cryptography is required by PyMySQL when the MySQL server uses
+# caching_sha2_password (the default in MySQL 8.0+).
+cryptography==41.0.7
+
+# ── Authentication ─────────────────────────────────────────────────────────────
+Flask-Login==0.6.3
+Flask-Bcrypt==1.0.1
+
+# ── Forms & CSRF protection ────────────────────────────────────────────────────
+Flask-WTF==1.2.1
+WTForms==3.1.2
+# email-validator is required by WTForms' Email() validator.
+email-validator==2.1.1
+
+# ── Configuration ──────────────────────────────────────────────────────────────
+python-dotenv==1.0.1
+
+# ── Testing ────────────────────────────────────────────────────────────────────
+# Unit / integration tests run against SQLite (no MySQL server required).
+# Concurrent-checkout tests (Phase 3) require a real MySQL 8.0+ server.
+pytest==7.4.4
+pytest-flask==1.3.0

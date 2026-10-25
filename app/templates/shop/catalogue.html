@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% block title %}Shop Products{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- ── Header & Search Row ─────────────────────────────────────────────── -->
+  <div class="row align-items-center mb-4">
+    <div class="col-md-6 mb-3 mb-md-0">
+      <h1 class="h3 fw-bold mb-1">
+        <i class="bi bi-grid me-2 text-primary"></i>Product Catalogue
+      </h1>
+      <p class="text-muted small mb-0">
+        Browse products managed with InnoDB inventory control and background order fulfillment.
+      </p>
+    </div>
+
+    <!-- Search Form -->
+    <div class="col-md-6">
+      <form method="GET" action="{{ url_for('shop.catalogue') }}" class="d-flex gap-2">
+        {% if current_category %}
+        <input type="hidden" name="category" value="{{ current_category }}" />
+        {% endif %}
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0">
+            <i class="bi bi-search text-muted"></i>
+          </span>
+          <input
+            type="search"
+            name="q"
+            class="form-control border-start-0 ps-0"
+            placeholder="Search products by name, SKU, or description..."
+            value="{{ search_query }}"
+            aria-label="Search products"
+          />
+          <button class="btn btn-cartos" type="submit">Search</button>
+        </div>
+        {% if search_query or current_category %}
+        <a href="{{ url_for('shop.catalogue') }}" class="btn btn-outline-secondary" title="Clear all filters">
+          <i class="bi bi-x-lg"></i>
+        </a>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  <!-- ── Category Filter Pills ──────────────────────────────────────────── -->
+  {% if categories %}
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-4 pb-2 border-bottom">
+    <span class="small fw-semibold text-muted me-1">Categories:</span>
+    <a
+      href="{{ url_for('shop.catalogue', q=search_query if search_query else None) }}"
+      class="badge rounded-pill text-decoration-none px-3 py-2 {% if not current_category %}bg-primary text-white{% else %}bg-light text-dark border{% endif %}"
+    >
+      All Products
+    </a>
+    {% for cat in categories %}
+    <a
+      href="{{ url_for('shop.catalogue', category=cat, q=search_query if search_query else None) }}"
+      class="badge rounded-pill text-decoration-none px-3 py-2 {% if current_category == cat %}bg-primary text-white{% else %}bg-light text-dark border{% endif %}"
+    >
+      {{ cat }}
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ── Product Grid ────────────────────────────────────────────────────── -->
+  {% if products %}
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mb-4">
+    {% for product in products %}
+    {% set stock = product.available_stock %}
+    <div class="col">
+      <div class="card h-100 shadow-sm border-0 product-card">
+        <!-- Product Image Placeholder or Image -->
+        <div class="position-relative bg-light rounded-top d-flex align-items-center justify-content-center" style="height: 180px; overflow: hidden;">
+          {% if product.image_url %}
+          <img src="{{ product.image_url }}" alt="{{ product.name }}" class="card-img-top w-100 h-100 object-fit-cover" />
+          {% else %}
+          <i class="bi bi-box-seam display-4 text-muted opacity-50"></i>
+          {% endif %}
+
+          <!-- Stock Status Badge -->
+          <div class="position-absolute top-0 end-0 m-2">
+            {% if stock > 5 %}
+            <span class="badge bg-success shadow-sm">
+              <i class="bi bi-check-circle me-1"></i>In Stock
+            </span>
+            {% elif stock > 0 %}
+            <span class="badge bg-warning text-dark shadow-sm">
+              <i class="bi bi-exclamation-triangle me-1"></i>Only {{ stock }} left
+            </span>
+            {% else %}
+            <span class="badge bg-danger shadow-sm">
+              <i class="bi bi-x-circle me-1"></i>Out of Stock
+            </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body d-flex flex-column">
+          {% if product.category %}
+          <div class="mb-1">
+            <span class="badge bg-secondary-subtle text-secondary small">{{ product.category }}</span>
+          </div>
+          {% endif %}
+
+          <h5 class="card-title h6 fw-bold mb-1">
+            <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" class="text-decoration-none text-dark">
+              {{ product.name }}
+            </a>
+          </h5>
+
+          {% if product.sku %}
+          <p class="text-muted font-monospace small mb-2">SKU: {{ product.sku }}</p>
+          {% endif %}
+
+          {% if product.description %}
+          <p class="card-text text-muted small flex-grow-1 text-truncate-2">
+            {{ product.description }}
+          </p>
+          {% else %}
+          <div class="flex-grow-1"></div>
+          {% endif %}
+
+          <div class="d-flex align-items-center justify-content-between pt-2 border-top mt-2">
+            <div>
+              <span class="fs-5 fw-bold text-primary">{{ product.price|inr }}</span>
+            </div>
+            <div>
+              <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" class="btn btn-sm btn-outline-primary">
+                View Details
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- ── Pagination ──────────────────────────────────────────────────────── -->
+  {% if pagination.pages > 1 %}
+  <nav aria-label="Catalogue pagination" class="my-4">
+    <ul class="pagination justify-content-center">
+      <!-- Previous Page -->
+      <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+        <a
+          class="page-link"
+          href="{{ url_for('shop.catalogue', page=pagination.prev_num, q=search_query, category=current_category) if pagination.has_prev else '#' }}"
+          aria-label="Previous"
+        >
+          &laquo; Prev
+        </a>
+      </li>
+
+      <!-- Page Numbers -->
+      {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if page_num %}
+          <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+            <a
+              class="page-link"
+              href="{{ url_for('shop.catalogue', page=page_num, q=search_query, category=current_category) }}"
+            >
+              {{ page_num }}
+            </a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+        {% endif %}
+      {% endfor %}
+
+      <!-- Next Page -->
+      <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+        <a
+          class="page-link"
+          href="{{ url_for('shop.catalogue', page=pagination.next_num, q=search_query, category=current_category) if pagination.has_next else '#' }}"
+          aria-label="Next"
+        >
+          Next &raquo;
+        </a>
+      </li>
+    </ul>
+  </nav>
+  {% endif %}
+
+  <!-- ── Empty States ────────────────────────────────────────────────────── -->
+  {% else %}
+  <div class="row justify-content-center py-5">
+    <div class="col-md-8 col-lg-6 text-center">
+      <div class="card border-0 shadow-sm p-4 p-md-5">
+        {% if total_active_products == 0 %}
+        <!-- Completely Empty Catalogue -->
+        <i class="bi bi-box2 display-1 text-muted mb-3 opacity-50"></i>
+        <h2 class="h4 fw-bold">Catalogue is currently empty</h2>
+        <p class="text-muted small mb-4">
+          There are no products available for purchase right now. Check back soon or log in as an administrator to add inventory.
+        </p>
+        {% if current_user.is_authenticated and current_user.is_admin %}
+        <div>
+          <a href="#" class="btn btn-cartos">
+            <i class="bi bi-plus-circle me-1"></i>Add First Product
+          </a>
+        </div>
+        {% endif %}
+        {% else %}
+        <!-- No Search Results -->
+        <i class="bi bi-search display-1 text-muted mb-3 opacity-50"></i>
+        <h2 class="h4 fw-bold">No matching products found</h2>
+        <p class="text-muted small mb-4">
+          No products matched your search criteria
+          {% if search_query %}for <strong>"{{ search_query }}"</strong>{% endif %}
+          {% if current_category %}in category <strong>"{{ current_category }}"</strong>{% endif %}.
+        </p>
+        <div>
+          <a href="{{ url_for('shop.catalogue') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset all filters
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

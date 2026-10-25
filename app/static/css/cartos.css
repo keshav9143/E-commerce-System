@@ -1,0 +1,111 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   cartos.css — CartOS custom styles
+   All Bootstrap 5 variables are overridden here rather than in-line so that
+   the theme can be changed in one place.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ── Brand colour palette ─────────────────────────────────────────────────── */
+:root {
+  --cartos-primary:    #2563eb;   /* Tailwind blue-600 */
+  --cartos-primary-dk: #1d4ed8;   /* hover / active */
+  --cartos-accent:     #f59e0b;   /* amber — used for admin badge */
+  --cartos-bg:         #f8fafc;   /* very light grey page background */
+  --cartos-navbar-bg:  #1e293b;   /* slate-800 */
+  --cartos-footer-bg:  #f1f5f9;   /* slate-100 */
+  --cartos-text-light: #94a3b8;   /* slate-400 */
+}
+
+/* ── Page background ─────────────────────────────────────────────────────── */
+body {
+  background-color: var(--cartos-bg);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* ── Navbar ──────────────────────────────────────────────────────────────── */
+.cartos-navbar {
+  background-color: var(--cartos-navbar-bg);
+}
+.cartos-navbar .navbar-brand,
+.cartos-navbar .nav-link {
+  color: #e2e8f0;         /* slate-200 */
+}
+.cartos-navbar .nav-link:hover,
+.cartos-navbar .nav-link:focus,
+.cartos-navbar .nav-link.active {
+  color: #fff;
+}
+.cartos-navbar .navbar-toggler-icon {
+  filter: invert(1);
+}
+
+/* ── Primary button ──────────────────────────────────────────────────────── */
+.btn-cartos {
+  background-color: var(--cartos-primary);
+  border-color:     var(--cartos-primary);
+  color: #fff;
+  font-weight: 600;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.btn-cartos:hover,
+.btn-cartos:focus {
+  background-color: var(--cartos-primary-dk);
+  border-color:     var(--cartos-primary-dk);
+  color: #fff;
+}
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+.card {
+  border-radius: 0.75rem;
+}
+
+/* ── Product catalogue ───────────────────────────────────────────────────── */
+.product-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.product-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important;
+}
+.text-truncate-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+.cartos-footer {
+  background-color: var(--cartos-footer-bg);
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.82rem;
+}
+
+/* ── Status badges used by the task dashboard (Phase 5) ─────────────────── */
+.badge-status-created   { background-color: #94a3b8; color: #fff; }
+.badge-status-ready     { background-color: #3b82f6; color: #fff; }
+.badge-status-running   { background-color: #10b981; color: #fff; }
+.badge-status-blocked   { background-color: #f59e0b; color: #fff; }
+.badge-status-completed { background-color: #6366f1; color: #fff; }
+.badge-status-failed    { background-color: #ef4444; color: #fff; }
+
+/* ── Form refinements ────────────────────────────────────────────────────── */
+.form-control:focus {
+  border-color: var(--cartos-primary);
+  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+}
+
+/* ── Flash container auto-hide is handled by Bootstrap's dismiss button.
+      A subtle animation makes it feel polished. ─────────────────────────── */
+#flash-container .alert {
+  animation: slideDown 0.3s ease;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Utility: monospace for code snippets in documentation pages ─────────── */
+.cartos-code {
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.875rem;
+}

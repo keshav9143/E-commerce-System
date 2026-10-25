@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Log in{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-sm-9 col-md-7 col-lg-5">
+
+      <!-- Card -->
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4 p-md-5">
+
+          <h1 class="h4 fw-bold text-center mb-1">Welcome back</h1>
+          <p class="text-center text-muted small mb-4">Log in to your CartOS account</p>
+
+          <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
+            {{ form.hidden_tag() }}
+
+            <!-- Email -->
+            <div class="mb-3">
+              {{ form.email.label(class="form-label fw-semibold") }}
+              {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+              {% for error in form.email.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+              {{ form.password.label(class="form-label fw-semibold") }}
+              <div class="input-group">
+                {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""),
+                                 id="passwordField") }}
+                <button class="btn btn-outline-secondary" type="button"
+                        onclick="togglePassword('passwordField', this)"
+                        tabindex="-1" aria-label="Show/hide password">
+                  <i class="bi bi-eye"></i>
+                </button>
+                {% for error in form.password.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Remember me -->
+            <div class="mb-4 form-check">
+              {{ form.remember_me(class="form-check-input") }}
+              {{ form.remember_me.label(class="form-check-label text-muted") }}
+            </div>
+
+            <!-- Submit -->
+            {{ form.submit(class="btn btn-cartos w-100") }}
+          </form>
+
+          <hr class="my-4" />
+          <p class="text-center text-muted small mb-0">
+            Don't have an account?
+            <a href="{{ url_for('auth.register') }}" class="text-decoration-none fw-semibold">
+              Create one
+            </a>
+          </p>
+
+        </div><!-- /.card-body -->
+      </div><!-- /.card -->
+
+    </div><!-- /.col -->
+  </div><!-- /.row -->
+</div><!-- /.container -->
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function togglePassword(fieldId, btn) {
+    const field = document.getElementById(fieldId);
+    const icon = btn.querySelector('i');
+    if (field.type === 'password') {
+      field.type = 'text';
+      icon.classList.replace('bi-eye', 'bi-eye-slash');
+    } else {
+      field.type = 'password';
+      icon.classList.replace('bi-eye-slash', 'bi-eye');
+    }
+  }
+</script>
+{% endblock %}

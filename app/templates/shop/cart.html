@@ -1,0 +1,351 @@
+
+{% extends "base.html" %}
+
+{% block title %}Shopping Cart{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{{ url_for('shop.catalogue') }}"
+                   class="text-decoration-none">
+                    <i class="bi bi-house me-1"></i>Shop
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                Shopping Cart
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Page heading -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 pb-2 border-bottom">
+        <h1 class="h3 fw-bold mb-0">
+            <i class="bi bi-cart3 me-2 text-primary"></i>
+            Shopping Cart
+        </h1>
+
+        {% if cart_items %}
+        <span class="text-muted small">
+            {{ cart_items|length }}
+            {% if cart_items|length == 1 %}product{% else %}products{% endif %}
+            in your cart
+        </span>
+        {% endif %}
+    </div>
+
+    {% if cart_items %}
+
+    <div class="row g-4">
+
+        <!-- Cart items -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" style="min-width: 220px;">
+                                    Product
+                                </th>
+                                <th scope="col" class="text-center"
+                                    style="min-width: 110px;">
+                                    Unit Price
+                                </th>
+                                <th scope="col" class="text-center"
+                                    style="min-width: 155px;">
+                                    Quantity
+                                </th>
+                                <th scope="col" class="text-end"
+                                    style="min-width: 125px;">
+                                    Line Total
+                                </th>
+                                <th scope="col" class="text-center"
+                                    style="min-width: 65px;">
+                                    Action
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for item in cart_items %}
+                            {% set prod = item.product %}
+                            {% set stock = prod.available_stock if prod else 0 %}
+                            {% set has_stock_issue = (stock < item.quantity) or (not prod or not prod.is_active) %}
+
+                            <tr {% if has_stock_issue %}class="table-warning"{% endif %}>
+
+                                <!-- Product -->
+                                <td>
+                                    {% if prod %}
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center me-3 border flex-shrink-0"
+                                             style="width: 60px; height: 60px; overflow: hidden;">
+                                            {% if prod.image_url %}
+                                            <img
+                                                src="{{ prod.image_url }}"
+                                                alt="{{ prod.name }}"
+                                                class="w-100 h-100 object-fit-cover">
+                                            {% else %}
+                                            <i class="bi bi-box-seam text-muted fs-4"></i>
+                                            {% endif %}
+                                        </div>
+
+                                        <div>
+                                            <h2 class="h6 fw-semibold mb-1">
+                                                <a href="{{ url_for('shop.product_detail', product_id=prod.id) }}"
+                                                   class="text-decoration-none text-dark">
+                                                    {{ prod.name }}
+                                                </a>
+                                            </h2>
+
+                                            <div class="d-flex flex-wrap gap-1 align-items-center">
+                                                {% if prod.sku %}
+                                                <span class="badge bg-light text-muted border font-monospace"
+                                                      style="font-size: 0.7rem;">
+                                                    SKU: {{ prod.sku }}
+                                                </span>
+                                                {% endif %}
+
+                                                {% if prod.category %}
+                                                <span class="badge bg-secondary-subtle text-secondary"
+                                                      style="font-size: 0.7rem;">
+                                                    {{ prod.category }}
+                                                </span>
+                                                {% endif %}
+                                            </div>
+
+                                            {% if not prod.is_active %}
+                                            <div class="text-danger small mt-1">
+                                                <i class="bi bi-exclamation-octagon me-1"></i>
+                                                Product is discontinued or inactive.
+                                            </div>
+                                            {% elif stock < item.quantity %}
+                                            <div class="text-danger small mt-1">
+                                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                                Only {{ stock }} units available in stock.
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-danger">
+                                        Product unavailable
+                                    </span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Unit price -->
+                                <td class="text-center font-monospace">
+                                    {% if prod %}
+                                        {{ prod.price|inr }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+
+                                <!-- Quantity update form -->
+                                <td>
+                                    {% if prod and prod.is_active %}
+                                    <form
+                                        method="POST"
+                                        action="{{ url_for('shop.update_cart_item') }}"
+                                        class="d-flex justify-content-center align-items-center gap-1">
+
+                                        <!-- Render CSRF token only.
+                                             Do not use hidden_tag() here:
+                                             it would also render cart_item_id. -->
+                                        {{ update_form.csrf_token }}
+
+                                        <input
+                                            type="hidden"
+                                            name="cart_item_id"
+                                            value="{{ item.id }}">
+
+                                        <input
+                                            type="number"
+                                            name="quantity"
+                                            value="{{ item.quantity }}"
+                                            min="1"
+                                            max="{{ stock }}"
+                                            class="form-control form-control-sm text-center"
+                                            style="width: 68px;"
+                                            aria-label="Quantity for {{ prod.name }}"
+                                            required>
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-sm btn-outline-primary"
+                                            title="Update quantity"
+                                            aria-label="Update quantity for {{ prod.name }}">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <span class="text-muted small">
+                                        Unavailable
+                                    </span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Line total -->
+                                <td class="text-end fw-bold font-monospace text-primary">
+                                    {% if prod %}
+                                        {{ item.line_total|inr }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+
+                                <!-- Remove form -->
+                                <td class="text-center">
+                                    <form
+                                        method="POST"
+                                        action="{{ url_for('shop.remove_cart_item') }}"
+                                        onsubmit="return confirm('Remove this item from your cart?');">
+
+                                        <!-- Render CSRF token only to avoid
+                                             duplicate cart_item_id fields. -->
+                                        {{ remove_form.csrf_token }}
+
+                                        <input
+                                            type="hidden"
+                                            name="cart_item_id"
+                                            value="{{ item.id }}">
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-sm btn-outline-danger"
+                                            title="Remove item"
+                                            aria-label="Remove item from cart">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </form>
+                                </td>
+
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card-footer bg-white p-3">
+                    <a href="{{ url_for('shop.catalogue') }}"
+                       class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Continue Shopping
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order summary -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm p-4"
+                 style="position: sticky; top: 2rem;">
+
+                <h2 class="h5 fw-bold mb-3">Order Summary</h2>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Subtotal:</span>
+                    <span class="fw-semibold font-monospace">
+                        {{ subtotal|inr }}
+                    </span>
+                </div>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Estimated Shipping:</span>
+                    <span class="text-success small fw-semibold">FREE</span>
+                </div>
+
+                <div class="d-flex justify-content-between mb-3 text-muted small">
+                    <span>Taxes:</span>
+                    <span>Calculated at checkout</span>
+                </div>
+
+                <hr class="my-3">
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <span class="fs-5 fw-bold">Total:</span>
+                    <span class="fs-4 fw-bold text-primary font-monospace">
+                        {{ subtotal|inr }}
+                    </span>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn btn-cartos w-100 py-2"
+                    disabled
+                    title="Checkout will be implemented in Phase 3, Step 3">
+                    <i class="bi bi-lock me-1"></i>
+                    Proceed to Checkout (Step 3)
+                </button>
+
+                <p class="text-muted small text-center mt-3 mb-0">
+                    <i class="bi bi-shield-check text-success me-1"></i>
+                    Inventory will be validated during checkout.
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Architecture note -->
+    <div class="card border-0 bg-light shadow-sm p-4 mt-4">
+        <div class="row align-items-center">
+            <div class="col-md-9">
+                <h3 class="h6 fw-bold mb-1">
+                    <i class="bi bi-database me-2 text-primary"></i>
+                    Shopping Cart Data Integrity
+                </h3>
+                <p class="text-muted small mb-0">
+                    Items are stored in the MySQL
+                    <code>cart_items</code> table and associated with your
+                    account. The <code>uq_cart_user_product</code> constraint
+                    prevents duplicate cart rows for the same user and product.
+                    Prices are calculated on the server.
+                </p>
+            </div>
+            <div class="col-md-3 text-md-end mt-2 mt-md-0">
+                <span class="badge bg-secondary-subtle text-secondary font-monospace p-2">
+                    Cart items: {{ cart_items|length }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+
+    <!-- Empty cart -->
+    <div class="row justify-content-center py-5">
+        <div class="col-md-8 col-lg-6 text-center">
+            <div class="card border-0 shadow-sm p-4 p-md-5">
+                <i class="bi bi-cart-x display-1 text-muted mb-3 opacity-50"></i>
+
+                <h2 class="h4 fw-bold">
+                    Your shopping cart is empty
+                </h2>
+
+                <p class="text-muted small mb-4">
+                    Looks like you haven't added any products to your cart yet.
+                    Explore our product catalogue to find items.
+                </p>
+
+                <div>
+                    <a href="{{ url_for('shop.catalogue') }}"
+                       class="btn btn-cartos">
+                        <i class="bi bi-bag-plus me-1"></i>
+                        Explore Products
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+
+</div>
+{% endblock %}

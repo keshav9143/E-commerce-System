@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Create account{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-sm-10 col-md-8 col-lg-6">
+
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4 p-md-5">
+
+          <h1 class="h4 fw-bold text-center mb-1">Create your account</h1>
+          <p class="text-center text-muted small mb-4">
+            Join CartOS — the first account registered becomes an administrator.
+          </p>
+
+          <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
+            {{ form.hidden_tag() }}
+
+            <!-- Username -->
+            <div class="mb-3">
+              {{ form.username.label(class="form-label fw-semibold") }}
+              {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else "")) }}
+              {% for error in form.username.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+              <div class="form-text">3–80 characters. Used in the admin dashboard.</div>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+              {{ form.email.label(class="form-label fw-semibold") }}
+              {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+              {% for error in form.email.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+              {{ form.password.label(class="form-label fw-semibold") }}
+              <div class="input-group">
+                {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""),
+                                 id="passwordField") }}
+                <button class="btn btn-outline-secondary" type="button"
+                        onclick="togglePassword('passwordField', this)"
+                        tabindex="-1" aria-label="Show/hide password">
+                  <i class="bi bi-eye"></i>
+                </button>
+                {% for error in form.password.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="form-text">Minimum 8 characters.</div>
+            </div>
+
+            <!-- Confirm password -->
+            <div class="mb-4">
+              {{ form.confirm_password.label(class="form-label fw-semibold") }}
+              <div class="input-group">
+                {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else ""),
+                                         id="confirmField") }}
+                <button class="btn btn-outline-secondary" type="button"
+                        onclick="togglePassword('confirmField', this)"
+                        tabindex="-1" aria-label="Show/hide password">
+                  <i class="bi bi-eye"></i>
+                </button>
+                {% for error in form.confirm_password.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+
+            {{ form.submit(class="btn btn-cartos w-100") }}
+          </form>
+
+          <hr class="my-4" />
+          <p class="text-center text-muted small mb-0">
+            Already have an account?
+            <a href="{{ url_for('auth.login') }}" class="text-decoration-none fw-semibold">
+              Log in
+            </a>
+          </p>
+
+        </div><!-- /.card-body -->
+      </div><!-- /.card -->
+
+    </div><!-- /.col -->
+  </div><!-- /.row -->
+</div><!-- /.container -->
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function togglePassword(fieldId, btn) {
+    const field = document.getElementById(fieldId);
+    const icon = btn.querySelector('i');
+    if (field.type === 'password') {
+      field.type = 'text';
+      icon.classList.replace('bi-eye', 'bi-eye-slash');
+    } else {
+      field.type = 'password';
+      icon.classList.replace('bi-eye-slash', 'bi-eye');
+    }
+  }
+</script>
+{% endblock %}

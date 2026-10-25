@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- ── Breadcrumb Navigation ─────────────────────────────────────────── -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="{{ url_for('shop.catalogue') }}" class="text-decoration-none">
+          <i class="bi bi-house me-1"></i>Shop
+        </a>
+      </li>
+      {% if product.category %}
+      <li class="breadcrumb-item">
+        <a href="{{ url_for('shop.catalogue', category=product.category) }}" class="text-decoration-none">
+          {{ product.category }}
+        </a>
+      </li>
+      {% endif %}
+      <li class="breadcrumb-item active text-truncate" aria-current="page" style="max-width: 300px;">
+        {{ product.name }}
+      </li>
+    </ol>
+  </nav>
+
+  <!-- ── Product Details Card ───────────────────────────────────────────── -->
+  <div class="card border-0 shadow-sm overflow-hidden mb-4">
+    <div class="row g-0">
+
+      <!-- Product Image Column -->
+      <div class="col-md-5 bg-light d-flex align-items-center justify-content-center p-4 border-end" style="min-height: 320px;">
+        {% if product.image_url %}
+        <img
+          src="{{ product.image_url }}"
+          alt="{{ product.name }}"
+          class="img-fluid rounded object-fit-contain"
+          style="max-height: 380px;"
+        />
+        {% else %}
+        <div class="text-center text-muted p-4">
+          <i class="bi bi-box-seam display-1 opacity-25"></i>
+          <p class="small text-muted mt-2">No product image uploaded</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Product Info Column -->
+      <div class="col-md-7 d-flex flex-column p-4 p-lg-5">
+
+        <!-- Category & SKU Badges -->
+        <div class="d-flex align-items-center gap-2 mb-2">
+          {% if product.category %}
+          <a
+            href="{{ url_for('shop.catalogue', category=product.category) }}"
+            class="badge bg-primary-subtle text-primary text-decoration-none"
+          >
+            <i class="bi bi-tag me-1"></i>{{ product.category }}
+          </a>
+          {% endif %}
+
+          {% if product.sku %}
+          <span class="badge bg-light text-muted border font-monospace">
+            SKU: {{ product.sku }}
+          </span>
+          {% endif %}
+
+          {% if not product.is_active %}
+          <span class="badge bg-secondary">
+            <i class="bi bi-eye-slash me-1"></i>Inactive (Admin Preview)
+          </span>
+          {% endif %}
+        </div>
+
+        <!-- Product Name -->
+        <h1 class="h3 fw-bold mb-3">{{ product.name }}</h1>
+
+        <!-- Price -->
+        <div class="mb-4">
+          <span class="display-6 fw-bold text-primary">{{ product.price|inr }}</span>
+          <span class="text-muted small ms-1">INR</span>
+        </div>
+
+        <!-- Stock Availability Card -->
+        <div class="card bg-light border-0 p-3 mb-4 rounded-3">
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+              {% if available_stock > 5 %}
+              <i class="bi bi-check-circle-fill text-success fs-3 me-3"></i>
+              <div>
+                <strong class="text-success d-block">In Stock</strong>
+                <small class="text-muted">{{ available_stock }} units ready to ship</small>
+              </div>
+              {% elif available_stock > 0 %}
+              <i class="bi bi-exclamation-triangle-fill text-warning fs-3 me-3"></i>
+              <div>
+                <strong class="text-warning-emphasis d-block">Low Stock</strong>
+                <small class="text-muted">Only {{ available_stock }} units left in warehouse</small>
+              </div>
+              {% else %}
+              <i class="bi bi-x-circle-fill text-danger fs-3 me-3"></i>
+              <div>
+                <strong class="text-danger d-block">Out of Stock</strong>
+                <small class="text-muted">Item temporarily unavailable for checkout</small>
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Quantitative Stock Counter -->
+            <div class="text-end">
+              <span class="badge {% if available_stock > 0 %}bg-dark{% else %}bg-secondary{% endif %} fs-6 px-3 py-2">
+                {{ available_stock }} available
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="mb-4">
+          <h2 class="h6 fw-bold text-uppercase text-muted tracking-wide mb-2">Description</h2>
+          <div class="text-secondary lh-base">
+            {% if product.description %}
+              <div style="white-space: pre-line;">{{ product.description }}</div>
+            {% else %}
+              <em class="text-muted">No description provided for this item.</em>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-auto pt-3 border-top d-flex flex-wrap gap-2 align-items-center">
+          <a href="{{ url_for('shop.catalogue') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Catalogue
+          </a>
+
+          {% if available_stock > 0 %}
+            {% if current_user.is_authenticated %}
+            <form method="POST" action="{{ url_for('shop.add_to_cart') }}" class="d-flex align-items-center gap-2 flex-wrap">
+              {{ form.hidden_tag() }}
+              <div class="input-group" style="width: 130px;">
+                <span class="input-group-text bg-white small">Qty</span>
+                {{ form.quantity(class="form-control text-center", min="1", max=available_stock, value="1", aria_label="Quantity") }}
+              </div>
+              <button type="submit" class="btn btn-cartos">
+                <i class="bi bi-cart-plus me-1"></i>Add to Cart
+              </button>
+            </form>
+            {% else %}
+            <a href="{{ url_for('auth.login', next=url_for('shop.product_detail', product_id=product.id)) }}" class="btn btn-cartos">
+              <i class="bi bi-box-arrow-in-right me-1"></i>Log in to Buy
+            </a>
+            {% endif %}
+          {% else %}
+          <button type="button" class="btn btn-secondary disabled">
+            <i class="bi bi-slash-circle me-1"></i>Sold Out
+          </button>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── OS & DBMS Under the Hood Card ─────────────────────────────────── -->
+  <div class="card border-0 bg-light-subtle shadow-sm p-4">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h3 class="h6 fw-bold mb-1">
+          <i class="bi bi-database-check text-primary me-2"></i>Resource &amp; Inventory Management
+        </h3>
+        <p class="text-muted small mb-0">
+          This product's stock is tracked in the normalized <code>inventory</code> table.
+          When ordered, row-level locks (<code>FOR UPDATE</code>) reserve capacity before background workers schedule packaging and quality control.
+        </p>
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <span class="badge bg-secondary-subtle text-secondary font-monospace p-2">
+          product_id: {{ product.id }} &middot; inventory_id: {{ product.inventory.id if product.inventory else 'None' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
