@@ -58,7 +58,7 @@
           {% if current_user.is_authenticated %}
           <li class="nav-item">
             <a class="nav-link {% if request.endpoint and request.endpoint.startswith('orders') %}active{% endif %}"
-               href="{{ url_for('orders.order_list') if 'orders.order_list' in [] else '#' }}">
+               href="{{ url_for('orders.order_list') }}">
               <i class="bi bi-bag me-1"></i>My Orders
             </a>
           </li>

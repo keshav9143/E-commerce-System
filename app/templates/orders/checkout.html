@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{{ url_for('shop.catalogue') }}" class="text-decoration-none">
+                    <i class="bi bi-house me-1"></i>Shop
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{{ url_for('shop.view_cart') }}" class="text-decoration-none">Cart</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Checkout</li>
+        </ol>
+    </nav>
+
+    <!-- Page heading -->
+    <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
+        <h1 class="h3 fw-bold mb-0">
+            <i class="bi bi-bag-check me-2 text-primary"></i>Checkout
+        </h1>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- ── Left column: Order Summary ─────────────────────────────────── -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h2 class="h5 fw-bold mb-0">
+                        <i class="bi bi-list-ul me-2 text-primary"></i>Order Summary
+                    </h2>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" style="min-width: 220px;">Product</th>
+                                <th scope="col" class="text-center">Unit Price</th>
+                                <th scope="col" class="text-center">Qty</th>
+                                <th scope="col" class="text-end">Line Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in cart_items %}
+                            {% set prod = item.product %}
+                            <tr>
+                                <td>
+                                    {% if prod %}
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center me-3 border flex-shrink-0"
+                                             style="width: 50px; height: 50px; overflow: hidden;">
+                                            {% if prod.image_url %}
+                                            <img src="{{ prod.image_url }}" alt="{{ prod.name }}"
+                                                 class="w-100 h-100 object-fit-cover">
+                                            {% else %}
+                                            <i class="bi bi-box-seam text-muted"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">{{ prod.name }}</div>
+                                            {% if prod.sku %}
+                                            <small class="text-muted font-monospace">SKU: {{ prod.sku }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-danger">Product unavailable</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center font-monospace">
+                                    {% if prod %}{{ prod.price|inr }}{% else %}—{% endif %}
+                                </td>
+                                <td class="text-center">{{ item.quantity }}</td>
+                                <td class="text-end fw-bold font-monospace text-primary">
+                                    {% if prod %}{{ item.line_total|inr }}{% else %}—{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">Order Total:</td>
+                                <td class="text-end fs-5 fw-bold text-primary font-monospace">
+                                    {{ subtotal|inr }}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Architecture note -->
+            <div class="card border-0 bg-light shadow-sm p-4">
+                <h3 class="h6 fw-bold mb-2">
+                    <i class="bi bi-database me-2 text-primary"></i>
+                    Checkout Architecture
+                </h3>
+                <p class="text-muted small mb-0">
+                    Inventory rows are locked in <strong>ascending <code>product_id</code> order</strong>
+                    (deadlock prevention via consistent lock ordering). The
+                    <code>reserved_quantity</code> is incremented atomically within the same
+                    transaction — the full stock deduction happens in the downstream
+                    <code>INVENTORY_RESERVE</code> fulfillment task.
+                    This two-phase approach lets checkout succeed quickly while reserving
+                    capacity, and simplifies cancellation.
+                </p>
+            </div>
+        </div>
+
+        <!-- ── Right column: Checkout Form ────────────────────────────────── -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm" style="position: sticky; top: 2rem;">
+                <div class="card-header bg-white py-3">
+                    <h2 class="h5 fw-bold mb-0">
+                        <i class="bi bi-geo-alt me-2 text-primary"></i>Delivery Details
+                    </h2>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('orders.checkout') }}" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <!-- Full Name -->
+                        <div class="mb-3">
+                            {{ form.full_name.label(class="form-label fw-semibold") }}
+                            {{ form.full_name(class="form-control" + (" is-invalid" if form.full_name.errors else "")) }}
+                            {% for error in form.full_name.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label fw-semibold") }}
+                            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                            {% for error in form.email.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="mb-3">
+                            {{ form.phone.label(class="form-label fw-semibold") }}
+                            {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else "")) }}
+                            {% for error in form.phone.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Address Line 1 -->
+                        <div class="mb-3">
+                            {{ form.address_line1.label(class="form-label fw-semibold") }}
+                            {{ form.address_line1(class="form-control" + (" is-invalid" if form.address_line1.errors else "")) }}
+                            {% for error in form.address_line1.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Address Line 2 -->
+                        <div class="mb-3">
+                            {{ form.address_line2.label(class="form-label fw-semibold") }}
+                            {{ form.address_line2(class="form-control" + (" is-invalid" if form.address_line2.errors else "")) }}
+                            {% for error in form.address_line2.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- City + State -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                {{ form.city.label(class="form-label fw-semibold") }}
+                                {{ form.city(class="form-control" + (" is-invalid" if form.city.errors else "")) }}
+                                {% for error in form.city.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-6">
+                                {{ form.state.label(class="form-label fw-semibold") }}
+                                {{ form.state(class="form-control" + (" is-invalid" if form.state.errors else "")) }}
+                                {% for error in form.state.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Pincode -->
+                        <div class="mb-3">
+                            {{ form.pincode.label(class="form-label fw-semibold") }}
+                            {{ form.pincode(class="form-control" + (" is-invalid" if form.pincode.errors else "")) }}
+                            {% for error in form.pincode.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-4">
+                            {{ form.notes.label(class="form-label fw-semibold") }}
+                            {{ form.notes(class="form-control" + (" is-invalid" if form.notes.errors else "")) }}
+                            {% for error in form.notes.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <hr class="my-3">
+
+                        <!-- Total -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <span class="fs-5 fw-bold">Total:</span>
+                            <span class="fs-4 fw-bold text-primary font-monospace">{{ subtotal|inr }}</span>
+                        </div>
+
+                        {{ form.submit(class="btn btn-cartos w-100 py-2") }}
+
+                        <p class="text-muted small text-center mt-3 mb-0">
+                            <i class="bi bi-shield-check text-success me-1"></i>
+                            Stock is validated server-side at order placement.
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /.row -->
+</div>
+{% endblock %}

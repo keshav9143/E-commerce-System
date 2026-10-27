@@ -444,6 +444,17 @@ class Order(db.Model):
         index=True,
     )
     notes: str = db.Column(db.Text, nullable=True)
+
+    # Shipping / delivery address snapshot (captured at checkout)
+    shipping_name: str | None = db.Column(db.String(100), nullable=True)
+    shipping_email: str | None = db.Column(db.String(254), nullable=True)
+    shipping_phone: str | None = db.Column(db.String(20), nullable=True)
+    shipping_address_line1: str | None = db.Column(db.String(200), nullable=True)
+    shipping_address_line2: str | None = db.Column(db.String(200), nullable=True)
+    shipping_city: str | None = db.Column(db.String(100), nullable=True)
+    shipping_state: str | None = db.Column(db.String(100), nullable=True)
+    shipping_pincode: str | None = db.Column(db.String(10), nullable=True)
+
     created_at: datetime = db.Column(db.DateTime, nullable=False, default=_now, index=True)
     updated_at: datetime = db.Column(
         db.DateTime, nullable=False, default=_now, onupdate=_now

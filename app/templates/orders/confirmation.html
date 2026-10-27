@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Order Confirmed — #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Success banner -->
+    <div class="alert alert-success border-0 shadow-sm mb-4" role="alert">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-check-circle-fill fs-3 me-3 text-success"></i>
+            <div>
+                <h1 class="h4 fw-bold mb-0">Order Placed Successfully!</h1>
+                <p class="mb-0 text-muted">
+                    Your order <strong>#{{ order.id }}</strong> has been received and is
+                    <span class="badge bg-warning text-dark">{{ order.status }}</span>.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- ── Order items ─────────────────────────────────────────────────── -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h2 class="h5 fw-bold mb-0">
+                        <i class="bi bi-receipt me-2 text-primary"></i>
+                        Order #{{ order.id }} — Items
+                    </h2>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" style="min-width: 220px;">Product</th>
+                                <th scope="col" class="text-center">Unit Price</th>
+                                <th scope="col" class="text-center">Qty</th>
+                                <th scope="col" class="text-end">Line Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for oi in order.items %}
+                            <tr>
+                                <td>
+                                    {% if oi.product %}
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center me-3 border flex-shrink-0"
+                                             style="width: 50px; height: 50px; overflow: hidden;">
+                                            {% if oi.product.image_url %}
+                                            <img src="{{ oi.product.image_url }}" alt="{{ oi.product.name }}"
+                                                 class="w-100 h-100 object-fit-cover">
+                                            {% else %}
+                                            <i class="bi bi-box-seam text-muted"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">{{ oi.product.name }}</div>
+                                            {% if oi.product.sku %}
+                                            <small class="text-muted font-monospace">SKU: {{ oi.product.sku }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-muted">Product #{{ oi.product_id }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center font-monospace">{{ oi.unit_price|inr }}</td>
+                                <td class="text-center">{{ oi.quantity }}</td>
+                                <td class="text-end fw-bold font-monospace text-primary">
+                                    {{ oi.line_total|inr }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">Order Total:</td>
+                                <td class="text-end fs-5 fw-bold text-primary font-monospace">
+                                    {{ order.total_amount|inr }}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                {% if order.notes %}
+                <div class="card-footer bg-white">
+                    <p class="small text-muted mb-0">
+                        <i class="bi bi-chat-left-text me-1"></i>
+                        <strong>Notes:</strong> {{ order.notes }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ── Order meta / next steps ─────────────────────────────────────── -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h2 class="h5 fw-bold mb-3">
+                        <i class="bi bi-info-circle me-2 text-primary"></i>Order Details
+                    </h2>
+                    <dl class="row small mb-0">
+                        <dt class="col-5 text-muted">Order ID</dt>
+                        <dd class="col-7 fw-semibold">#{{ order.id }}</dd>
+
+                        <dt class="col-5 text-muted">Status</dt>
+                        <dd class="col-7">
+                            <span class="badge bg-warning text-dark">{{ order.status }}</span>
+                        </dd>
+
+                        <dt class="col-5 text-muted">Placed on</dt>
+                        <dd class="col-7">{{ order.created_at.strftime('%d %b %Y, %H:%M') }} UTC</dd>
+
+                        <dt class="col-5 text-muted">Total</dt>
+                        <dd class="col-7 fw-bold text-primary font-monospace">
+                            {{ order.total_amount|inr }}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            {% if order.shipping_name or order.shipping_address_line1 %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h2 class="h5 fw-bold mb-3">
+                        <i class="bi bi-geo-alt me-2 text-primary"></i>Delivery Details
+                    </h2>
+                    <div class="small">
+                        <div class="fw-semibold text-dark">{{ order.shipping_name }}</div>
+                        {% if order.shipping_phone %}
+                        <div class="text-muted"><i class="bi bi-telephone me-1"></i>{{ order.shipping_phone }}</div>
+                        {% endif %}
+                        {% if order.shipping_email %}
+                        <div class="text-muted"><i class="bi bi-envelope me-1"></i>{{ order.shipping_email }}</div>
+                        {% endif %}
+                        <hr class="my-2">
+                        <div>{{ order.shipping_address_line1 }}</div>
+                        {% if order.shipping_address_line2 %}
+                        <div>{{ order.shipping_address_line2 }}</div>
+                        {% endif %}
+                        <div>{{ order.shipping_city }}, {{ order.shipping_state }} - {{ order.shipping_pincode }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="d-grid gap-2">
+                <a href="{{ url_for('shop.catalogue') }}" class="btn btn-cartos">
+                    <i class="bi bi-bag me-1"></i>Continue Shopping
+                </a>
+                <a href="{{ url_for('orders.order_list') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-list-ul me-1"></i>View All Orders
+                </a>
+            </div>
+
+            <!-- Architecture note -->
+            <div class="card border-0 bg-light shadow-sm p-4 mt-4">
+                <h3 class="h6 fw-bold mb-2">
+                    <i class="bi bi-database me-2 text-primary"></i>
+                    Two-Phase Inventory Model
+                </h3>
+                <p class="text-muted small mb-0">
+                    At checkout, <code>reserved_quantity</code> was incremented by your cart
+                    quantities — units are <em>reserved</em> but not yet deducted.  The
+                    <code>INVENTORY_RESERVE</code> fulfillment task will deduct
+                    <code>quantity</code> and release <code>reserved_quantity</code> once the
+                    order is confirmed.  This keeps checkout fast and makes cancellation simple.
+                </p>
+            </div>
+        </div>
+
+    </div><!-- /.row -->
+</div>
+{% endblock %}
